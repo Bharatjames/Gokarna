@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gokarna Coastal Escape — Crew Trip Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Fraunces', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            sand: '#FDF8F2',
+            terracotta: '#E06D53',
+            ocean: '#0F4C5C',
+            sunset: '#F4A261',
+            dusk: '#0B192C',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    h1, h2, h3, .font-display {
+      font-family: 'Fraunces', serif;
+    }
+    .sunset-hero {
+      background: linear-gradient(135deg, #0F4C5C 0%, #1E6B7B 45%, #E06D53 85%, #F4A261 100%);
+    }
+    .card-warm {
+      box-shadow: 0 10px 30px -10px rgba(15, 76, 92, 0.08);
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(224, 109, 83, 0.45);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-sand text-slate-800 dark:bg-dusk dark:text-slate-100 transition-colors duration-300 min-h-screen">
+
+  <!-- Hidden HTML5 Audio Element for One Name.mp3 (falls back to Synth if MP3 not in repo) -->
+  <audio id="mp3Player" src="One Name.mp3" loop preload="auto"></audio>
+
+  <!-- Opening Anthem Banner -->
+  <div id="audioPromptBanner" class="bg-slate-900/95 text-white text-xs sm:text-sm py-2.5 px-4 flex items-center justify-between gap-3 sticky top-0 z-50 backdrop-blur-md border-b border-white/10">
+    <div class="flex items-center gap-2.5 truncate">
+      <span class="inline-block w-2.5 h-2.5 rounded-full bg-sunset animate-ping shrink-0"></span>
+      <span class="truncate"><strong>Opening Track Ready:</strong> "Thalaivan Nirandharam" (Jana Nayagan) — tap anywhere or hit Play!</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <button type="button" onclick="toggleAudio(true)" class="bg-terracotta hover:bg-orange-600 text-white font-semibold px-3.5 py-1 rounded-full text-xs transition shadow">
+        ▶ Play Track
+      </button>
+      <button type="button" onclick="dismissBanner()" class="text-slate-400 hover:text-white px-1.5 text-lg leading-none" title="Dismiss">&times;</button>
+    </div>
+  </div>
+
+  <!-- Sunset Coastal Hero -->
+  <header class="sunset-hero text-white relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.18),transparent_50%)] pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 relative z-10">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-black/20 backdrop-blur-sm px-3.5 py-1 rounded-full text-xs font-semibold tracking-wider uppercase mb-3 border border-white/15">
+            <span>🌊 Arabian Sea Escape</span>
+            <span>•</span>
+            <span id="tripDatesDisplay" contenteditable="true" onblur="saveTripMeta()" class="outline-none border-b border-dashed border-white/70 cursor-text">Nov 13 – Nov 16, 2026</span>
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-bold tracking-tight">
+            Gokarna Coastal Escape
+          </h1>
+          <p class="mt-2 text-amber-50/90 max-w-xl text-sm sm:text-base">
+            Golden sunsets at Kudle, cliff treks to Paradise Beach, hilltop cafes, instant expense splitting, and our road trip jukebox.
+          </p>
+        </div>
+
+        <!-- Live Stats & Dusk Toggle -->
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="bg-white/15 backdrop-blur-md rounded-2xl px-5 py-3.5 border border-white/25">
+            <div class="text-[11px] uppercase tracking-wider text-amber-200 font-semibold">Crew Pool Total</div>
+            <div id="heroTotalSpend" class="text-2xl sm:text-3xl font-bold mt-0.5">₹0</div>
+          </div>
+          <div class="bg-white/15 backdrop-blur-md rounded-2xl px-5 py-3.5 border border-white/25">
+            <div class="text-[11px] uppercase tracking-wider text-amber-200 font-semibold">Per Person Share</div>
+            <div id="heroPerPerson" class="text-2xl sm:text-3xl font-bold mt-0.5">₹0</div>
+          </div>
+          <button type="button" onclick="toggleDarkMode()" class="bg-slate-900/35 hover:bg-slate-900/55 border border-white/25 px-4 py-3.5 rounded-2xl text-sm font-semibold transition flex items-center gap-2">
+            <span id="themeIcon">🌙</span>
+            <span id="themeLabel">Dusk Mode</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Editable Crew Hub -->
+      <div class="mt-8 pt-6 border-t border-white/20">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-100">The Crew (<span id="crewCount">7</span>)</span>
+          <div class="flex items-center gap-2">
+            <input id="newMemberInput" type="text" placeholder="Add friend name..." class="bg-white/15 placeholder-white/70 text-white text-xs rounded-full px-3.5 py-1.5 border border-white/30 focus:outline-none focus:ring-2 focus:ring-sunset" onkeydown="if(event.key==='Enter') addCrewMember()" />
+            <button type="button" onclick="addCrewMember()" class="bg-sunset text-slate-950 font-bold text-xs px-3.5 py-1.5 rounded-full hover:bg-amber-300 transition shadow-sm">+ Add</button>
+          </div>
+        </div>
+        <div id="crewList" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+    <!-- 1. Curated Gokarna Guide (Beaches, Food, Resorts) -->
+    <section class="bg-white dark:bg-slate-900/90 rounded-3xl p-6 sm:p-8 card-warm border border-amber-200/70 dark:border-slate-800">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-ocean dark:text-cyan-400">Curated Coastal Guide</span>
+          <h2 class="text-2xl sm:text-3xl font-bold mt-0.5">Beaches, Food &amp; Resorts</h2>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="setGuideTab('Beaches')" id="tab-Beaches" class="guide-tab px-4 py-2 rounded-xl text-sm font-semibold bg-ocean text-white transition">🏖️ Beaches</button>
+          <button type="button" onclick="setGuideTab('Food')" id="tab-Food" class="guide-tab px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 transition">🍽️ Food &amp; Cafes</button>
+          <button type="button" onclick="setGuideTab('Resorts')" id="tab-Resorts" class="guide-tab px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 transition">🏡 Stays &amp; Resorts</button>
+          <button type="button" onclick="toggleAddSpotModal()" class="px-3.5 py-2 rounded-xl text-sm font-semibold border border-terracotta text-terracotta hover:bg-terracotta hover:text-white transition">+ Add Spot</button>
+        </div>
+      </div>
+
+      <!-- Add Custom Spot Drawer -->
+      <div id="addSpotDrawer" class="hidden mt-5 p-4 rounded-2xl bg-amber-50/80 dark:bg-slate-800/80 border border-amber-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-5 gap-3">
+        <select id="spotCategory" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm">
+          <option value="Beaches">Beaches</option>
+          <option value="Food">Food &amp; Cafes</option>
+          <option value="Resorts">Stays &amp; Resorts</option>
+        </select>
+        <input id="spotName" type="text" placeholder="Place Name" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" />
+        <input id="spotTag" type="text" placeholder="Vibe / Tag (e.g. Sunset)" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" />
+        <input id="spotDesc" type="text" placeholder="Short description" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" />
+        <button type="button" onclick="addCustomSpot()" class="bg-terracotta hover:bg-orange-600 text-white font-semibold rounded-xl px-4 py-2 text-sm">Save Spot</button>
+      </div>
+
+      <div id="guideCardsGrid" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </section>
+
+    <!-- 2. Expense Tracker & Quick Bill Calculator -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Expense Ledger -->
+      <div class="lg:col-span-2 bg-white dark:bg-slate-900/90 rounded-3xl p-6 sm:p-8 card-warm border border-amber-200/70 dark:border-slate-800 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-terracotta">Trip Spending Tracker</span>
+            <h2 class="text-2xl sm:text-3xl font-bold mt-0.5">Group Expenses &amp; Split</h2>
+          </div>
+          <button type="button" onclick="copyWhatsAppSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
+            📋 Copy WhatsApp Summary
+          </button>
+        </div>
+
+        <!-- Log Expense Form -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-sand/80 dark:bg-slate-800/70 p-4 rounded-2xl border border-amber-200/60 dark:border-slate-700">
+          <input id="expTitle" type="text" placeholder="What was it for? (e.g., Dinner at Mantra)" class="sm:col-span-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" />
+          <input id="expAmount" type="number" placeholder="Amount (₹)" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" />
+          <select id="expCategory" class="px-3 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm">
+            <option value="Food & Cafe">🍽️ Food &amp; Cafe</option>
+            <option value="Stay & Resort">🏡 Stay &amp; Resort</option>
+            <option value="Travel & Scooters">🛵 Travel &amp; Scooters</option>
+            <option value="Boat & Activities">🚤 Boat &amp; Activities</option>
+            <option value="Other">🧾 Other</option>
+          </select>
+
+          <div class="sm:col-span-2 flex items-center gap-2">
+            <label class="text-xs font-bold text-slate-500 shrink-0">Paid by:</label>
+            <select id="expPaidBy" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm"></select>
+          </div>
+          <div class="sm:col-span-2">
+            <button type="button" onclick="addExpense()" class="w-full bg-ocean hover:bg-cyan-900 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition shadow-sm">
+              + Add Expense
+            </button>
+          </div>
+        </div>
+
+        <!-- Itemized Expense List -->
+        <div id="expenseList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+
+        <!-- Smart Settlements -->
+        <div class="bg-amber-50/90 dark:bg-slate-800/80 p-4 rounded-2xl border border-amber-200/80 dark:border-slate-700">
+          <h3 class="font-bold text-xs uppercase tracking-wider text-ocean dark:text-amber-300 mb-2">Who Owes Whom (Simplified Transfers)</h3>
+          <div id="settlementList" class="space-y-1.5 text-sm"></div>
+        </div>
+      </div>
+
+      <!-- Quick Bill Calculator -->
+      <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-6 sm:p-8 card-warm border border-amber-200/70 dark:border-slate-800 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-ocean dark:text-cyan-400">Arithmetic Helper</span>
+          <h2 class="text-2xl font-bold mt-0.5 mb-4">Quick Bill Calculator</h2>
+
+          <div class="bg-slate-900 text-white p-4 rounded-2xl text-right mb-4 shadow-inner">
+            <div id="calcHistory" class="text-xs text-slate-400 h-4 truncate"></div>
+            <div id="calcDisplay" class="text-3xl font-mono font-bold tracking-tight overflow-x-auto">0</div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2 text-sm font-bold">
+            <button type="button" onclick="calcClear()" class="col-span-2 bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 py-3 rounded-xl hover:opacity-90">AC</button>
+            <button type="button" onclick="calcBackspace()" class="bg-slate-100 dark:bg-slate-800 py-3 rounded-xl hover:opacity-80">⌫</button>
+            <button type="button" onclick="calcInput('/')" class="bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 py-3 rounded-xl">÷</button>
+
+            <button type="button" onclick="calcInput('7')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">7</button>
+            <button type="button" onclick="calcInput('8')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">8</button>
+            <button type="button" onclick="calcInput('9')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">9</button>
+            <button type="button" onclick="calcInput('*')" class="bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 py-3 rounded-xl">×</button>
+
+            <button type="button" onclick="calcInput('4')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">4</button>
+            <button type="button" onclick="calcInput('5')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">5</button>
+            <button type="button" onclick="calcInput('6')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">6</button>
+            <button type="button" onclick="calcInput('-')" class="bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 py-3 rounded-xl">−</button>
+
+            <button type="button" onclick="calcInput('1')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">1</button>
+            <button type="button" onclick="calcInput('2')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">2</button>
+            <button type="button" onclick="calcInput('3')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">3</button>
+            <button type="button" onclick="calcInput('+')" class="bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 py-3 rounded-xl">+</button>
+
+            <button type="button" onclick="calcInput('0')" class="col-span-2 bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">0</button>
+            <button type="button" onclick="calcInput('.')" class="bg-slate-50 dark:bg-slate-800/60 py-3 rounded-xl">.</button>
+            <button type="button" onclick="calcEquals()" class="bg-terracotta text-white py-3 rounded-xl hover:bg-orange-600">=</button>
+          </div>
+        </div>
+
+        <button type="button" onclick="sendCalcToExpense()" class="mt-4 w-full bg-ocean/10 hover:bg-ocean/20 dark:bg-cyan-950/60 text-ocean dark:text-cyan-300 font-bold py-2.5 rounded-xl text-xs transition">
+          ↑ Send Total to Expense Form
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. Road Trip Jukebox (Default Song + Custom Songs) -->
+    <section class="bg-white dark:bg-slate-900/90 rounded-3xl p-6 sm:p-8 card-warm border border-amber-200/70 dark:border-slate-800">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-terracotta">Road Trip Jukebox</span>
+          <h2 class="text-2xl sm:text-3xl font-bold mt-0.5">Trip Anthems &amp; Beach Playlist</h2>
+        </div>
+
+        <!-- Audio Player Bar -->
+        <div class="flex flex-wrap items-center gap-3 bg-amber-50/90 dark:bg-slate-800 p-3.5 rounded-2xl border border-amber-200/70 dark:border-slate-700">
+          <button type="button" id="playPauseBtn" onclick="toggleAudio()" class="bg-terracotta hover:bg-orange-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 shadow-sm transition">
+            <span id="playIcon">▶</span>
+            <span id="playBtnText">Play Default</span>
+          </button>
+          <div class="text-xs min-w-[180px]">
+            <div id="nowPlayingTitle" class="font-bold text-slate-900 dark:text-white">Thalaivan Nirandharam (Jana Nayagan)</div>
+            <div id="nowPlayingSub" class="text-slate-500 dark:text-slate-400">Anirudh Ravichander, Vijay • Default Track</div>
+          </div>
+          <select id="synthModeSelect" onchange="switchSynthMode()" class="ml-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold">
+            <option value="mp3">🎵 One Name.mp3 (or Anthem)</option>
+            <option value="lofi">🌅 Kudle Sunset Lo-Fi</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Add Song Form -->
+        <div class="bg-sand/80 dark:bg-slate-800/70 p-4 rounded-2xl border border-amber-200/60 dark:border-slate-700 space-y-3">
+          <h3 class="font-bold text-base">Add Song to Playlist</h3>
+          <input id="songTitle" type="text" placeholder="Song Name" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" />
+          <input id="songArtist" type="text" placeholder="Artist / Movie" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" />
+          <input id="songLink" type="url" placeholder="YouTube / Spotify Link (optional)" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" />
+          <div class="flex gap-2">
+            <select id="songVibe" class="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm">
+              <option value="Mass / Hype">🔥 Mass / Hype</option>
+              <option value="Sunset Chill">🌅 Sunset Chill</option>
+              <option value="Night Drive">🌌 Night Drive</option>
+              <option value="Beach Bonfire">🪵 Beach Bonfire</option>
+            </select>
+            <button type="button" onclick="addSong()" class="bg-ocean hover:bg-cyan-900 text-white font-semibold px-4 py-2 rounded-xl text-sm transition">
+              + Add
+            </button>
+          </div>
+        </div>
+
+        <!-- Song Queue -->
+        <div class="lg:col-span-2 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Crew Queue (<span id="songCount">0</span> songs)</span>
+            <div class="flex gap-1.5 text-xs">
+              <button type="button" onclick="filterSongs('ALL')" class="song-filter px-3 py-1 rounded-full bg-ocean text-white font-semibold">All</button>
+              <button type="button" onclick="filterSongs('Mass / Hype')" class="song-filter px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800">Mass</button>
+              <button type="button" onclick="filterSongs('Sunset Chill')" class="song-filter px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800">Chill</button>
+              <button type="button" onclick="filterSongs('Night Drive')" class="song-filter px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800">Drive</button>
+            </div>
+          </div>
+          <div id="songQueueList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Notes & Packing Checklist -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-6 sm:p-8 card-warm border border-amber-200/70 dark:border-slate-800 flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-terracotta">Trip Scratchpad</span>
+            <h2 class="text-2xl font-bold mt-0.5">Crew Notes &amp; Bus Details</h2>
+          </div>
+          <span id="notesSavedBadge" class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Auto-saved</span>
+        </div>
+        <textarea id="tripNotes" rows="8" oninput="saveNotes()" class="w-full flex-1 p-4 rounded-2xl bg-amber-50/60 dark:bg-slate-800/70 border border-amber-200/70 dark:border-slate-700 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-terracotta" placeholder="Write bus timings, seat numbers, scooter contacts, or itinerary notes..."></textarea>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-6 sm:p-8 card-warm border border-amber-200/70 dark:border-slate-800">
+        <span class="text-xs font-bold uppercase tracking-wider text-ocean dark:text-cyan-400">Trip Readiness</span>
+        <h2 class="text-2xl font-bold mt-0.5 mb-4">Packing &amp; Action Checklist</h2>
+        <div class="flex gap-2 mb-4">
+          <input id="newCheckInput" type="text" placeholder="Add checklist item..." class="flex-1 px-3.5 py-2 rounded-xl bg-sand/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" onkeydown="if(event.key==='Enter') addCheckItem()" />
+          <button type="button" onclick="addCheckItem()" class="bg-terracotta hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-xl text-sm">Add</button>
+        </div>
+        <div id="checklistContainer" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="text-center text-xs text-slate-500 dark:text-slate-400 py-8 border-t border-amber-200/50 dark:border-slate-800 mt-10">
+    Gokarna Coastal Escape • All changes save automatically on your device
+  </footer>
+
+  <script>
+    const STORAGE_KEY = 'gokarna_trip_hub_v3';
+
+    const defaultData = {
+      tripDates: 'Nov 13 – Nov 16, 2026',
+      crew: ['Bharath', 'Venky', 'Karthik', 'Santhosh', 'Sanjay', 'Priyankar', 'Krishna'],
+      songs: [
+        {
+          id: 1,
+          title: 'Thalaivan Nirandharam (Jana Nayagan)',
+          artist: 'Anirudh Ravichander, Vijay',
+          vibe: 'Mass / Hype',
+          link: 'https://www.youtube.com/results?search_query=Thalaivan+Nirandharam+Jana+Nayagan',
+          votes: 15,
+          isDefault: true
+        },
+        {
+          id: 2,
+          title: 'Ilahi',
+          artist: 'Arijit Singh, Pritam',
+          vibe: 'Sunset Chill',
+          link: 'https://www.youtube.com/results?search_query=Ilahi+Yeh+Jawaani+Hai+Deewani',
+          votes: 9
+        },
+        {
+          id: 3,
+          title: 'Nee Kavithaigala',
+          artist: 'Pradeep Kumar',
+          vibe: 'Night Drive',
+          link: 'https://www.youtube.com/results?search_query=Nee+Kavithaigala',
+          votes: 7
+        }
+      ],
+      spots: [
+        { category: 'Beaches', name: 'Kudle Beach', tag: 'Best Sunset & Shacks', desc: 'Crescent bay ideal for evening sunset sessions, frisbee, and lively beachfront cafes.' },
+        { category: 'Beaches', name: 'Om Beach', tag: 'Iconic Twin-Crescent', desc: 'Shaped like the sacred Om symbol; starting point for the rocky cliff trek and boat rides.' },
+        { category: 'Beaches', name: 'Half Moon & Paradise Beach', tag: 'Secluded Trek Coves', desc: 'Accessible via a scenic 45-minute coastal hill hike from Om Beach or motorboat return.' },
+        { category: 'Beaches', name: 'Gokarna Main Beach', tag: 'Temple Shore', desc: 'Wide golden shoreline right beside Shri Mahabaleshwara Temple for morning walks.' },
+        { category: 'Food', name: 'Namaste Cafe (Om Beach)', tag: 'Seafront Dining', desc: 'Classic beachside spot right on Om Beach for wood-fired pizzas, seafood platters, and shakes.' },
+        { category: 'Food', name: 'Mantra Cafe', tag: 'Panoramic Cliff View', desc: 'Elevated hilltop lounge overlooking Kudle Bay—great for dinner and starry sea views.' },
+        { category: 'Food', name: 'Prema Hilltop Hotel', tag: 'Authentic Breakfast', desc: 'Must-visit on Kudle Road for crispy masala dosa, idli-vada, and filter coffee.' },
+        { category: 'Food', name: 'Chez Christophe', tag: 'French-Coastal Bakery', desc: 'Cozy spot near Main Beach known for croissants, wood-fired crepes, and cold coffee.' },
+        { category: 'Resorts', name: 'Zostel Gokarna', tag: 'Cliffside Backpacker Vibe', desc: 'Vibrant hilltop hostel overlooking the Arabian Sea with great common areas for groups.' },
+        { category: 'Resorts', name: 'Kudle Beach View Resort & Spa', tag: 'Hilltop Pool & Cottages', desc: 'Spacious rooms and cottages perched right above Kudle Beach.' },
+        { category: 'Resorts', name: 'Namaste Yoga Farm', tag: 'Garden Cottages', desc: 'Peaceful bamboo and garden cottages tucked right behind Kudle Beach.' }
+      ],
+      expenses: [
+        { id: 101, title: 'Scooter Rentals (3 Bikes)', amount: 1500, category: 'Travel & Scooters', paidBy: 'Bharath' },
+        { id: 102, title: 'Prema Hilltop Breakfast', amount: 840, category: 'Food & Cafe', paidBy: 'Venky' }
+      ],
+      notes: "• Shri Mahabaleshwara Temple Dress Code: Men must wear dhoti/veshti (no shirt); women in saree or salwar.\n• Last motorboat from Paradise Beach back to Om/Kudle leaves around 5:30 PM (~₹350/head).\n• Keep cash handy for beach shacks and auto rides from Madangeri Cross.",
+      checklist: [
+        { id: 1, text: 'Traditional Dhoti / Veshti for Temple Darshan', done: false },
+        { id: 2, text: 'Driving License (original) for Scooter Rental', done: true },
+        { id: 3, text: 'Sunscreen, Sunglasses & Trekking Sandals', done: false },
+        { id: 4, text: 'Power Bank & Charging Cables', done: false }
+      ]
+    };
+
+    let state = null;
+    try {
+      state = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    } catch (e) {
+      state = null;
+    }
+    if (!state || !Array.isArray(state.crew)) {
+      state = JSON.parse(JSON.stringify(defaultData));
+    }
+
+    let currentGuideTab = 'Beaches';
+    let currentSongFilter = 'ALL';
+    let calcExpression = '';
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+      renderAll();
+    }
+
+    // --- Theme ---
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      html.classList.toggle('dark');
+      const isDark = html.classList.contains('dark');
+      document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+      document.getElementById('themeLabel').textContent = isDark ? 'Coastal Day' : 'Dusk Mode';
+    }
+
+    // --- Trip Meta & Crew ---
+    function saveTripMeta() {
+      state.tripDates = document.getElementById('tripDatesDisplay').innerText.trim() || defaultData.tripDates;
+      saveState();
+    }
+
+    function addCrewMember() {
+      const input = document.getElementById('newMemberInput');
+      const name = input.value.trim();
+      if (!name || state.crew.includes(name)) return;
+      state.crew.push(name);
+      input.value = '';
+      saveState();
+    }
+
+    function removeCrewMember(index) {
+      if (state.crew.length <= 1) return;
+      state.crew.splice(index, 1);
+      saveState();
+    }
+
+    function renderCrew() {
+      document.getElementById('tripDatesDisplay').innerText = state.tripDates;
+      document.getElementById('crewCount').innerText = state.crew.length;
+      const list = document.getElementById('crewList');
+      list.innerHTML = state.crew.map((member, idx) => `
+        <span class="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 px-3.5 py-1.5 rounded-full text-xs font-semibold">
+          <span>👤 ${escapeHtml(member)}</span>
+          <button type="button" onclick="removeCrewMember(${idx})" class="text-white/75 hover:text-white ml-1 font-bold" title="Remove">&times;</button>
+        </span>
+      `).join('');
+
+      const paidSelect = document.getElementById('expPaidBy');
+      paidSelect.innerHTML = state.crew.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+    }
+
+    // --- Audio Player (MP3 + Tone.js Fallback) ---
+    let isPlaying = false;
+    let synthLoop = null;
+    let synth = null;
+    let autoTriggered = false;
+    let mp3Available = true;
+
+    const mp3El = document.getElementById('mp3Player');
+    mp3El.addEventListener('error', () => {
+      mp3Available = false;
+    });
+
+    async function initSynth() {
+      if (synth || typeof Tone === 'undefined') return;
+      await Tone.start();
+      synth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'sawtooth' },
+        envelope: { attack: 0.03, decay: 0.2, sustain: 0.3, release: 0.6 }
+      }).toDestination();
+      synth.volume.value = -10;
+    }
+
+    async function startSynthSequence() {
+      await initSynth();
+      if (!synth) return;
+      if (synthLoop) {
+        synthLoop.stop();
+        synthLoop.dispose();
+      }
+      const mode = document.getElementById('synthModeSelect').value;
+      const anthemNotes = [
+        ['E3', 'B3', 'E4'], ['E3', 'B3'], ['G3', 'D4'], ['A3', 'E4'],
+        ['E3', 'B3', 'E4'], ['D3', 'A3'], ['B2', 'F#3'], ['E3', 'B3']
+      ];
+      const lofiNotes = [
+        ['C4', 'E4', 'G4', 'B4'], ['A3', 'C4', 'E4', 'G4'],
+        ['F3', 'A3', 'C4', 'E4'], ['G3', 'B3', 'D4', 'F4']
+      ];
+      const pattern = mode === 'lofi' ? lofiNotes : anthemNotes;
+      let idx = 0;
+
+      Tone.Transport.bpm.value = mode === 'lofi' ? 82 : 128;
+      synthLoop = new Tone.Loop((time) => {
+        const chord = pattern[idx % pattern.length];
+        synth.triggerAttackRelease(chord, mode === 'lofi' ? '2n' : '8n', time);
+        idx++;
+      }, mode === 'lofi' ? '1m' : '4n').start(0);
+
+      Tone.Transport.start();
+    }
+
+    function stopAllAudio() {
+      mp3El.pause();
+      if (typeof Tone !== 'undefined') {
+        Tone.Transport.stop();
+      }
+    }
+
+    async function toggleAudio(forcePlay = false) {
+      const mode = document.getElementById('synthModeSelect').value;
+      if (forcePlay || !isPlaying) {
+        stopAllAudio();
+        isPlaying = true;
+        document.getElementById('playIcon').textContent = '⏸';
+        document.getElementById('playBtnText').textContent = 'Pause';
+        dismissBanner();
+
+        if (mode === 'mp3' && mp3Available) {
+          try {
+            await mp3El.play();
+            return;
+          } catch (err) {
+            mp3Available = false;
+          }
+        }
+        await startSynthSequence();
+      } else {
+        isPlaying = false;
+        stopAllAudio();
+        document.getElementById('playIcon').textContent = '▶';
+        document.getElementById('playBtnText').textContent = 'Play Track';
+      }
+    }
+
+    function switchSynthMode() {
+      const mode = document.getElementById('synthModeSelect').value;
+      if (mode === 'mp3') {
+        document.getElementById('nowPlayingTitle').textContent = 'Thalaivan Nirandharam (Jana Nayagan)';
+        document.getElementById('nowPlayingSub').textContent = 'Anirudh Ravichander, Vijay • Default Track';
+      } else {
+        document.getElementById('nowPlayingTitle').textContent = 'Kudle Sunset Lo-Fi';
+        document.getElementById('nowPlayingSub').textContent = 'Coastal Ambient Synth';
+      }
+      if (isPlaying) toggleAudio(true);
+    }
+
+    function dismissBanner() {
+      const banner = document.getElementById('audioPromptBanner');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    function handleFirstInteraction() {
+      if (autoTriggered) return;
+      autoTriggered = true;
+      toggleAudio(true);
+    }
+    ['click', 'touchstart', 'keydown'].forEach(evt =>
+      document.addEventListener(evt, handleFirstInteraction, { once: true })
+    );
+
+    // --- Jukebox Queue ---
+    function addSong() {
+      const title = document.getElementById('songTitle').value.trim();
+      const artist = document.getElementById('songArtist').value.trim() || 'Crew Pick';
+      const link = document.getElementById('songLink').value.trim();
+      const vibe = document.getElementById('songVibe').value;
+      if (!title) return;
+
+      state.songs.push({
+        id: Date.now(),
+        title,
+        artist,
+        vibe,
+        link: link || ('https://www.youtube.com/results?search_query=' + encodeURIComponent(title + ' ' + artist)),
+        votes: 1
+      });
+      document.getElementById('songTitle').value = '';
+      document.getElementById('songArtist').value = '';
+      document.getElementById('songLink').value = '';
+      saveState();
+    }
+
+    function voteSong(id) {
+      const song = state.songs.find(s => s.id === id);
+      if (song) {
+        song.votes += 1;
+        saveState();
+      }
+    }
+
+    function playSongById(id) {
+      const song = state.songs.find(s => s.id === id);
+      if (!song) return;
+      document.getElementById('nowPlayingTitle').textContent = song.title;
+      document.getElementById('nowPlayingSub').textContent = song.artist + ' • Now Playing';
+      toggleAudio(true);
+    }
+
+    function filterSongs(vibe) {
+      currentSongFilter = vibe;
+      renderSongs();
+    }
+
+    function renderSongs() {
+      const filtered = currentSongFilter === 'ALL'
+        ? state.songs
+        : state.songs.filter(s => s.vibe === currentSongFilter);
+      document.getElementById('songCount').innerText = filtered.length;
+
+      const list = document.getElementById('songQueueList');
+      list.innerHTML = filtered.map(song => `
+        <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-sand/70 dark:bg-slate-800/70 border ${song.isDefault ? 'border-terracotta/70' : 'border-slate-200/70 dark:border-slate-700'}">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm truncate">${escapeHtml(song.title)}</span>
+              ${song.isDefault ? '<span class="shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-terracotta text-white">Default Track</span>' : ''}
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">${escapeHtml(song.artist)} • <span class="text-ocean dark:text-cyan-400 font-semibold">${escapeHtml(song.vibe)}</span></div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="playSongById(${song.id})" class="px-2.5 py-1.5 rounded-xl bg-terracotta/15 text-terracotta hover:bg-terracotta hover:text-white text-xs font-bold transition">▶</button>
+            <a href="${escapeHtml(song.link)}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-xl bg-slate-200/80 dark:bg-slate-700 text-xs font-semibold hover:opacity-80">YT ↗</a>
+            <button type="button" onclick="voteSong(${song.id})" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold">▲ ${song.votes}</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- Curated Guide ---
+    function setGuideTab(tab) {
+      currentGuideTab = tab;
+      document.querySelectorAll('.guide-tab').forEach(btn => {
+        btn.classList.remove('bg-ocean', 'text-white');
+        btn.classList.add('bg-slate-100', 'dark:bg-slate-800');
+      });
+      const active = document.getElementById('tab-' + tab);
+      if (active) {
+        active.classList.remove('bg-slate-100', 'dark:bg-slate-800');
+        active.classList.add('bg-ocean', 'text-white');
+      }
+      renderGuide();
+    }
+
+    function toggleAddSpotModal() {
+      document.getElementById('addSpotDrawer').classList.toggle('hidden');
+    }
+
+    function addCustomSpot() {
+      const category = document.getElementById('spotCategory').value;
+      const name = document.getElementById('spotName').value.trim();
+      const tag = document.getElementById('spotTag').value.trim() || 'Crew Pick';
+      const desc = document.getElementById('spotDesc').value.trim() || 'Added to our Gokarna itinerary.';
+      if (!name) return;
+
+      state.spots.unshift({ category, name, tag, desc });
+      document.getElementById('spotName').value = '';
+      document.getElementById('spotTag').value = '';
+      document.getElementById('spotDesc').value = '';
+      toggleAddSpotModal();
+      setGuideTab(category);
+      saveState();
+    }
+
+    function renderGuide() {
+      const items = state.spots.filter(s => s.category === currentGuideTab);
+      const grid = document.getElementById('guideCardsGrid');
+      grid.innerHTML = items.map(spot => `
+        <div class="p-5 rounded-2xl bg-sand/80 dark:bg-slate-800/75 border border-amber-200/70 dark:border-slate-700 flex flex-col justify-between gap-3 hover:border-terracotta/50 transition">
+          <div>
+            <span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-ocean/10 dark:bg-cyan-950 text-ocean dark:text-cyan-300 mb-2">${escapeHtml(spot.tag)}</span>
+            <h3 class="text-lg font-bold">${escapeHtml(spot.name)}</h3>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">${escapeHtml(spot.desc)}</p>
+          </div>
+          <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spot.name + ' Gokarna')}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-bold text-terracotta hover:underline mt-2">
+            Open in Google Maps ↗
+          </a>
+        </div>
+      `).join('');
+    }
+
+    // --- Expenses & Settlements ---
+    function addExpense() {
+      const title = document.getElementById('expTitle').value.trim();
+      const amount = parseFloat(document.getElementById('expAmount').value);
+      const category = document.getElementById('expCategory').value;
+      const paidBy = document.getElementById('expPaidBy').value;
+
+      if (!title || isNaN(amount) || amount <= 0) return;
+
+      state.expenses.unshift({ id: Date.now(), title, amount, category, paidBy });
+      document.getElementById('expTitle').value = '';
+      document.getElementById('expAmount').value = '';
+      saveState();
+    }
+
+    function deleteExpense(id) {
+      state.expenses = state.expenses.filter(e => e.id !== id);
+      saveState();
+    }
+
+    function calculateSettlements() {
+      const total = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+      const share = state.crew.length ? total / state.crew.length : 0;
+
+      document.getElementById('heroTotalSpend').innerText = '₹' + total.toLocaleString('en-IN');
+      document.getElementById('heroPerPerson').innerText = '₹' + Math.round(share).toLocaleString('en-IN');
+
+      const balances = {};
+      state.crew.forEach(m => balances[m] = -share);
+      state.expenses.forEach(e => {
+        if (balances[e.paidBy] !== undefined) {
+          balances[e.paidBy] += e.amount;
+        }
+      });
+
+      const debtors = [];
+      const creditors = [];
+      Object.entries(balances).forEach(([person, bal]) => {
+        if (bal < -1) debtors.push({ person, amount: -bal });
+        else if (bal > 1) creditors.push({ person, amount: bal });
+      });
+
+      const txns = [];
+      let i = 0, j = 0;
+      while (i < debtors.length && j < creditors.length) {
+        const pay = Math.min(debtors[i].amount, creditors[j].amount);
+        txns.push(debtors[i].person + ' → ' + creditors[j].person + ': ₹' + Math.round(pay).toLocaleString('en-IN'));
+        debtors[i].amount -= pay;
+        creditors[j].amount -= pay;
+        if (debtors[i].amount < 1) i++;
+        if (creditors[j].amount < 1) j++;
+      }
+
+      const container = document.getElementById('settlementList');
+      container.innerHTML = txns.length
+        ? txns.map(t => `<div class="font-semibold text-slate-700 dark:text-slate-200">💸 ${escapeHtml(t)}</div>`).join('')
+        : '<div class="text-slate-500 text-xs">All settled up! Log expenses above to compute transfers.</div>';
+      return { total, share, txns };
+    }
+
+    function renderExpenses() {
+      const list = document.getElementById('expenseList');
+      list.innerHTML = state.expenses.map(exp => `
+        <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-sand/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700">
+          <div>
+            <div class="font-bold text-sm">${escapeHtml(exp.title)}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${escapeHtml(exp.category)} • Paid by <strong class="text-ocean dark:text-cyan-400">${escapeHtml(exp.paidBy)}</strong></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-sm">₹${exp.amount.toLocaleString('en-IN')}</span>
+            <button type="button" onclick="deleteExpense(${exp.id})" class="text-rose-500 hover:text-rose-700 text-base font-bold px-1.5" title="Delete">&times;</button>
+          </div>
+        </div>
+      `).join('');
+      calculateSettlements();
+    }
+
+    function copyWhatsAppSummary() {
+      const { total, share, txns } = calculateSettlements();
+      const lines = [
+        '🌊 *Gokarna Trip Expense Summary*',
+        'Total Spend: ₹' + total.toLocaleString('en-IN') + ' (₹' + Math.round(share) + '/person)',
+        '',
+        '*Settlements:*',
+        ...(txns.length ? txns : ['All settled!'])
+      ];
+      navigator.clipboard.writeText(lines.join('\n'));
+      alert('Trip expense summary copied for WhatsApp!');
+    }
+
+    // --- Calculator ---
+    function calcInput(val) {
+      calcExpression += val;
+      document.getElementById('calcDisplay').innerText = calcExpression;
+    }
+
+    function calcClear() {
+      calcExpression = '';
+      document.getElementById('calcHistory').innerText = '';
+      document.getElementById('calcDisplay').innerText = '0';
+    }
+
+    function calcBackspace() {
+      calcExpression = calcExpression.slice(0, -1);
+      document.getElementById('calcDisplay').innerText = calcExpression || '0';
+    }
+
+    function calcEquals() {
+      try {
+        if (!/^[0-9+\-*/.() ]+$/.test(calcExpression)) return;
+        const result = Function('"use strict";return (' + calcExpression + ')')();
+        document.getElementById('calcHistory').innerText = calcExpression + ' =';
+        calcExpression = String(Math.round(result * 100) / 100);
+        document.getElementById('calcDisplay').innerText = calcExpression;
+      } catch (e) {
+        document.getElementById('calcDisplay').innerText = 'Error';
+        calcExpression = '';
+      }
+    }
+
+    function sendCalcToExpense() {
+      const val = parseFloat(document.getElementById('calcDisplay').innerText);
+      if (!isNaN(val) && val > 0) {
+        document.getElementById('expAmount').value = val;
+        document.getElementById('expTitle').focus();
+      }
+    }
+
+    // --- Notes & Checklist ---
+    function saveNotes() {
+      state.notes = document.getElementById('tripNotes').value;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+      const badge = document.getElementById('notesSavedBadge');
+      badge.innerText = 'Saving...';
+      setTimeout(() => badge.innerText = 'Auto-saved', 500);
+    }
+
+    function addCheckItem() {
+      const input = document.getElementById('newCheckInput');
+      const text = input.value.trim();
+      if (!text) return;
+      state.checklist.push({ id: Date.now(), text, done: false });
+      input.value = '';
+      saveState();
+    }
+
+    function toggleCheckItem(id) {
+      const item = state.checklist.find(c => c.id === id);
+      if (item) {
+        item.done = !item.done;
+        saveState();
+      }
+    }
+
+    function renderNotesAndChecklist() {
+      document.getElementById('tripNotes').value = state.notes;
+      const container = document.getElementById('checklistContainer');
+      container.innerHTML = state.checklist.map(item => `
+        <label class="flex items-center gap-3 p-3 rounded-xl bg-sand/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700 cursor-pointer">
+          <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCheckItem(${item.id})" class="w-4 h-4 accent-terracotta rounded" />
+          <span class="text-sm ${item.done ? 'line-through text-slate-400' : ''}">${escapeHtml(item.text)}</span>
+        </label>
+      `).join('');
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderAll() {
+      renderCrew();
+      renderGuide();
+      renderExpenses();
+      renderSongs();
+      renderNotesAndChecklist();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
